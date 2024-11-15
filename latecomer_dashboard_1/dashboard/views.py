@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 import pandas as pd
 import numpy as np
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 import os
 from django.core.files.storage import default_storage
@@ -141,3 +143,38 @@ def upload_file(request):
         
         return redirect('dashboard')
     return redirect('dashboard')
+
+USERS = {
+    "admin": "password123",  # username: password
+    "guest": "guestpassword",
+}
+
+# Login View
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # Hardcoded User Authentication
+        if username in USERS and USERS[username] == password:
+            user = authenticate(username=username, password=password)
+            if user is None:
+                user = User(username=username)
+                user.set_password(password)
+            login(request, user)
+            return redirect('dashboard')  # Redirect to a dashboard page
+        else:
+            return HttpResponse("Invalid credentials", status=403)
+
+    return render(request, 'login.html')
+
+# Logout View
+def user_logout(request):
+    logout(request)
+    return redirect('login')
+
+# Sign-Up Page (informational)
+def signup_page(request):
+    return render(request, 'signup.html')
+
+
